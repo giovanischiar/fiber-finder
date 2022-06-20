@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+
+  <data>
+    <variable name="restaurant" type="io.schiar.fiberfinder.view.viewdata.RestaurantViewData" />
+    <variable name="index" type="int"/>
+    <variable
+      name="selectedRestaurantListener"
+      type="io.schiar.fiberfinder.view.SelectedRestaurantListener" />
+  </data>
+
+  <FrameLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/white"
+    android:onClick="@{() -> selectedRestaurantListener.onSelectRestaurant(index)}">
+    <androidx.appcompat.widget.LinearLayoutCompat
+      android:layout_width="match_parent"
+      android:layout_height="50dp"
+      android:gravity="center">
+      <TextView
+        android:layout_width="100dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="2"
+        android:text="@{restaurant.name}"/>
+    </androidx.appcompat.widget.LinearLayoutCompat>
+  </FrameLayout>
+
+</layout>
