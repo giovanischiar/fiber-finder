@@ -2,12 +2,17 @@ package io.schiar.fiberfinder.viewmodel
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import io.schiar.fiberfinder.model.Restaurant
+import io.schiar.fiberfinder.model.repository.LocationRepository
+import io.schiar.fiberfinder.model.repository.LocationRepositoryInterface
 import io.schiar.fiberfinder.model.repository.RestaurantRepository
 import io.schiar.fiberfinder.model.repository.RestaurantRepositoryInterface
+import io.schiar.fiberfinder.view.viewdata.LocationViewData
 import io.schiar.fiberfinder.view.viewdata.RestaurantViewData
 
 class RestaurantsViewModel(
-    private val restaurantRepository: RestaurantRepositoryInterface = RestaurantRepository()
+    private val restaurantRepository: RestaurantRepositoryInterface = RestaurantRepository(),
+    private val locationRepository: LocationRepositoryInterface = LocationRepository()
 ) : ViewModel() {
     val restaurants: MutableLiveData<List<RestaurantViewData>> by lazy {
         MutableLiveData<List<RestaurantViewData>>()
@@ -21,10 +26,23 @@ class RestaurantsViewModel(
         restaurant.postValue(restaurants.value?.get(index) ?: return)
     }
 
+    fun fetchRestaurantLocations() {
+        restaurant.value ?: return
+        val restaurantValue = restaurant.value as RestaurantViewData
+        locationRepository.fetch(restaurantValue.name) {
+            restaurant.postValue(
+                RestaurantViewData(
+                    restaurantValue.name,
+                    restaurantValue.menu,
+                    it.map { location -> LocationViewData(location.latitude.toString(), location.longitude.toString()) })
+            )
+        }
+    }
+
     fun fetch() {
         restaurantRepository.fetch {
             restaurants.postValue(it.map { restaurant ->
-                RestaurantViewData(restaurant.name, restaurant.menu)
+                RestaurantViewData(restaurant.name, restaurant.menu, listOf())
             })
         }
     }
