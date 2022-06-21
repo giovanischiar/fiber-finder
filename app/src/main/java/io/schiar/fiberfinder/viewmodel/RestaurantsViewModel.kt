@@ -34,7 +34,7 @@ class RestaurantsViewModel(
                 RestaurantViewData(
                     restaurantValue.name,
                     restaurantValue.menu,
-                    it.map { location -> LocationViewData(location.latitude.toString(), location.longitude.toString()) })
+                    it.map { location -> LocationViewData(location.latitude, location.longitude) })
             )
         }
     }

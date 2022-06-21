@@ -28,7 +28,7 @@ class LocationRepository : LocationRepositoryInterface {
             val map = jsonObj.toMap()
             @Suppress("UNCHECKED_CAST")
             val results = map["results"] as List<LinkedHashMap<String, String>>?
-            @Suppress("CAST_NEVER_SUCCEEDS") val locations = results?.subList(1, results.size)?.map {
+            @Suppress("CAST_NEVER_SUCCEEDS") val locations = results?.map {
                 val geometry = it["geometry"] as LinkedHashMap<String, LinkedHashMap<String, Double>>
                 val location = geometry["location"] ?: return@thread
                 val lat = location["lat"] ?: return@thread

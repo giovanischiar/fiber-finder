@@ -46,14 +46,22 @@ class RestaurantFragment : Fragment() {
             if (it.locations.isEmpty()) return@observe
             it.locations.forEach { location ->
                 val latLng = LatLng(
-                    location.latitude.toDouble(),
-                    location.longitude.toDouble()
+                    location.latitude,
+                    location.longitude
                 )
                 val marker = MarkerOptions().position(latLng)
                 builder.include(marker.position)
                 googleMap?.addMarker(marker)
             }
             googleMap ?: return@observe
+            val latitude = 37.3845545
+            val longitude = -122.0269173
+            val latLng = LatLng(
+                latitude,
+                longitude
+            )
+            val marker = MarkerOptions().position(latLng)
+            builder.include(marker.position)
             val bounds = builder.build()
             val cu = CameraUpdateFactory.newLatLngBounds(bounds, resources.getDimension(R.dimen.map_zoom_padding).roundToInt());
             googleMap?.animateCamera(cu)
