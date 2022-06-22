@@ -2,6 +2,7 @@ package io.schiar.fiberfinder.viewmodel
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import io.schiar.fiberfinder.model.Location
 import io.schiar.fiberfinder.model.Restaurant
 import io.schiar.fiberfinder.model.repository.LocationRepository
 import io.schiar.fiberfinder.model.repository.LocationRepositoryInterface
@@ -26,10 +27,10 @@ class RestaurantsViewModel(
         restaurant.postValue(restaurants.value?.get(index) ?: return)
     }
 
-    fun fetchRestaurantLocations() {
+    fun fetchRestaurantLocations(latitude: Double, longitude: Double, radius: Int) {
         restaurant.value ?: return
         val restaurantValue = restaurant.value as RestaurantViewData
-        locationRepository.fetch(restaurantValue.name) {
+        locationRepository.fetch(restaurantValue.name, Location(latitude, longitude), radius) {
             restaurant.postValue(
                 RestaurantViewData(
                     restaurantValue.name,
