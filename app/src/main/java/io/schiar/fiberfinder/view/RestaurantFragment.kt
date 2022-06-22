@@ -84,6 +84,7 @@ class RestaurantFragment : Fragment(), LocationListener, OnMapReadyCallback, Obs
 
     private fun Double.getZoomLevel(): Float {
         return if (this > 0) {
+            context ?: return 16f
             val metrics = resources.displayMetrics
             val size = if (metrics.widthPixels < metrics.heightPixels) metrics.widthPixels
             else metrics.heightPixels
