@@ -75,22 +75,11 @@ class RestaurantFragment : Fragment(), LocationListener, OnMapReadyCallback, Obs
         viewModel.fetchRestaurantLocations(location.latitude, location.longitude, radius.roundToInt())
         createOrMoveUserIcon()
         val center = CameraUpdateFactory.newLatLng(currentLocation)
-        val zoom = CameraUpdateFactory.zoomTo(radius.getZoomLevel())
+        val zoom = CameraUpdateFactory.zoomTo(radius.getZoomLevel(context, resources))
         googleMap?.apply {
             moveCamera(center)
             animateCamera(zoom)
         }
-    }
-
-    private fun Double.getZoomLevel(): Float {
-        return if (this > 0) {
-            context ?: return 16f
-            val metrics = resources.displayMetrics
-            val size = if (metrics.widthPixels < metrics.heightPixels) metrics.widthPixels
-            else metrics.heightPixels
-            val scale = this * size / 300000
-            (16 - ln(scale) / ln(2.0)).toFloat()
-        } else 16f
     }
 
     private fun requestLocationUpdates() {

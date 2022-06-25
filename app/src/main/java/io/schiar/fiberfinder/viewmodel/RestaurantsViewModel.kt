@@ -27,6 +27,26 @@ class RestaurantsViewModel(
         restaurant.postValue(restaurants.value?.get(index) ?: return)
     }
 
+    fun fetchAllRestaurantLocations(latitude: Double, longitude: Double, radius: Int) {
+        restaurants.value ?: return
+        val restaurantsValue = restaurants.value
+        val updatedRestaurants = mutableListOf<RestaurantViewData>()
+        restaurantsValue?.toMutableList()?.toCollection(updatedRestaurants)
+        //val reducedList = listOf(restaurantsValue?.get(37) ?: return)
+        restaurantsValue?.forEach {
+            locationRepository.fetch(it.name, Location(latitude, longitude), radius) { locations ->
+                val index = updatedRestaurants.indexOf(it)
+                val restaurantViewData = RestaurantViewData(
+                    it.name,
+                    it.menu,
+                    locations.map { location -> LocationViewData(location.latitude, location.longitude) }
+                )
+                updatedRestaurants[index] = restaurantViewData
+                restaurants.postValue(updatedRestaurants.toList())
+            }
+        }
+    }
+
     fun fetchRestaurantLocations(latitude: Double, longitude: Double, radius: Int) {
         restaurant.value ?: return
         val restaurantValue = restaurant.value as RestaurantViewData

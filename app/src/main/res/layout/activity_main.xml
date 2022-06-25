@@ -1,23 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.drawerlayout.widget.DrawerLayout
+  xmlns:android="http://schemas.android.com/apk/res/android"
   xmlns:tools="http://schemas.android.com/tools"
   android:layout_width="match_parent"
   android:layout_height="match_parent"
   android:fitsSystemWindows="true"
-  tools:context=".MainActivity">
+  tools:context=".MainActivity"
+  tools:openDrawer="start"
+  android:id="@+id/drawer">
 
-  <com.google.android.material.appbar.AppBarLayout
+  <androidx.coordinatorlayout.widget.CoordinatorLayout
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:fitsSystemWindows="true">
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
 
-    <com.google.android.material.appbar.MaterialToolbar
-      android:id="@+id/toolbar"
+    <com.google.android.material.appbar.AppBarLayout
       android:layout_width="match_parent"
-      android:layout_height="?attr/actionBarSize" />
+      android:layout_height="wrap_content"
+      android:fitsSystemWindows="true">
 
-  </com.google.android.material.appbar.AppBarLayout>
+      <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize" />
 
-  <include layout="@layout/content_main" />
+    </com.google.android.material.appbar.AppBarLayout>
 
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+    <include layout="@layout/content_main" />
+
+  </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+  <com.google.android.material.navigation.NavigationView
+    android:id="@+id/nav_view"
+    android:layout_width="wrap_content"
+    android:layout_height="match_parent"
+    android:layout_gravity="start"
+    android:fitsSystemWindows="true">
+    <FrameLayout
+      android:layout_width="match_parent"
+      android:layout_height="match_parent"
+      android:id="@+id/restaurantsFragmentHolder"
+      />
+  </com.google.android.material.navigation.NavigationView>
+
+</androidx.drawerlayout.widget.DrawerLayout>

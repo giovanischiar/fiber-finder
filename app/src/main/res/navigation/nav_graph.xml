@@ -3,23 +3,33 @@
   xmlns:app="http://schemas.android.com/apk/res-auto"
   xmlns:tools="http://schemas.android.com/tools"
   android:id="@+id/nav_graph"
-  app:startDestination="@id/RestaurantsFragment">
+  app:startDestination="@id/MapsFragment">
+
+  <fragment
+    android:id="@+id/MapsFragment"
+    android:name="io.schiar.fiberfinder.view.MapsFragment"
+    android:label="@string/app_name"
+    tools:layout="@layout/fragment_restaurant">
+    <action
+      android:id="@+id/action_RestaurantsFragment_to_RestaurantFragment"
+      app:destination="@id/RestaurantFragment" />
+  </fragment>
 
   <fragment
     android:id="@+id/RestaurantsFragment"
     android:name="io.schiar.fiberfinder.view.RestaurantsFragment"
     android:label="@string/restaurants_fragment_label"
     tools:layout="@layout/fragment_restaurants">
-
-    <action
-      android:id="@+id/action_RestaurantsFragment_to_RestaurantFragment"
-      app:destination="@id/SecondFragment" />
   </fragment>
+
   <fragment
-    android:id="@+id/SecondFragment"
+    android:id="@+id/RestaurantFragment"
     android:name="io.schiar.fiberfinder.view.RestaurantFragment"
     android:label="@string/restaurant_fragment_label"
     tools:layout="@layout/fragment_restaurant">
+    <action
+      android:id="@+id/action_RestaurantsFragment_to_RestaurantFragment"
+      app:destination="@id/RestaurantFragment" />
   </fragment>
 
 </navigation>
