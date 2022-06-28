@@ -75,7 +75,7 @@ class RestaurantFragment : Fragment(), LocationListener, OnMapReadyCallback, Obs
         viewModel.fetchRestaurantLocations(location.latitude, location.longitude, radius.roundToInt())
         createOrMoveUserIcon()
         val center = CameraUpdateFactory.newLatLng(currentLocation)
-        val zoom = CameraUpdateFactory.zoomTo(radius.getZoomLevel(context, resources))
+        val zoom = CameraUpdateFactory.zoomTo(radius.getZoomLevel(context))
         googleMap?.apply {
             moveCamera(center)
             animateCamera(zoom)

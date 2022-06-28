@@ -4,10 +4,10 @@ import android.content.Context
 import android.content.res.Resources
 import kotlin.math.ln
 
-fun Double.getZoomLevel(context: Context?, resources: Resources): Float {
+fun Double.getZoomLevel(context: Context?): Float {
     return if (this > 0) {
         context ?: return 16f
-        val metrics = resources.displayMetrics
+        val metrics = context.resources.displayMetrics
         val size = if (metrics.widthPixels < metrics.heightPixels) metrics.widthPixels
         else metrics.heightPixels
         val scale = this * size / 300000

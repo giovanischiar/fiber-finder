@@ -34,6 +34,7 @@ class MapsFragment :
     GoogleMap.OnCameraMoveStartedListener,
     GoogleMap.OnMyLocationButtonClickListener,
     GoogleMap.OnMarkerClickListener,
+    OnRadiusChangeButtonClickedListener,
     Observer<List<RestaurantViewData>> {
 
     private lateinit var viewModel: RestaurantsViewModel
@@ -77,6 +78,49 @@ class MapsFragment :
         super.onViewCreated(view, savedInstanceState)
         val mapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment?
         mapFragment?.getMapAsync(this)
+
+        view.findViewById<Button>(R.id.search_here_btn).setOnClickListener {
+            val centerLatLng = map?.cameraPosition?.target
+            centerLatLng ?: return@setOnClickListener
+            currentLocation?.latitude =  centerLatLng.latitude
+            currentLocation?.longitude =  centerLatLng.longitude
+
+            val bounds = map?.projection?.visibleRegion?.latLngBounds
+            val llNeLat = bounds?.northeast?.latitude
+            val llSwLat = bounds?.southwest?.latitude
+            val llNeLng = bounds?.northeast?.longitude
+            val llSwLng = bounds?.southwest?.longitude
+            val results = FloatArray(5)
+            Location.distanceBetween(
+                llNeLat ?: return@setOnClickListener,
+                llNeLng ?: return@setOnClickListener,
+                llSwLat ?: return@setOnClickListener,
+                llSwLng ?: return@setOnClickListener,
+                results
+            )
+            radius = (results[0].toDouble())/2
+            viewModel.fetchAllRestaurantLocations(
+                centerLatLng.latitude,
+                centerLatLng.longitude,
+                radius.roundToInt()
+            )
+
+            moveToLocation(currentLocation ?: return@setOnClickListener)
+        }
+    }
+
+    override fun onRadiusButtonClicked() {
+        val builder: AlertDialog.Builder = AlertDialog.Builder(requireContext())
+        builder.setTitle("Set radius (in meters)")
+        val input = EditText(requireContext())
+        input.inputType = InputType.TYPE_CLASS_NUMBER
+        input.setText(radius.toString())
+        builder.setView(input)
+        builder.setPositiveButton("OK") { _, _ ->
+            radius = input.text.toString().toDouble()
+            onLocationChanged(currentLocation ?: return@setPositiveButton)
+        }
+        builder.show()
     }
 
     private fun requestLocationUpdates() {
