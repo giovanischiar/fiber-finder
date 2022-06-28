@@ -1,15 +1,19 @@
 package io.schiar.fiberfinder.view
 
 import android.Manifest
+import android.app.AlertDialog
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Bundle
+import android.text.InputType
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
+import android.widget.EditText
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
@@ -26,6 +30,7 @@ import io.schiar.fiberfinder.view.viewdata.LocationViewData
 import io.schiar.fiberfinder.view.viewdata.RestaurantViewData
 import io.schiar.fiberfinder.viewmodel.RestaurantsViewModel
 import kotlin.math.roundToInt
+
 
 class MapsFragment :
     Fragment(),
@@ -45,8 +50,10 @@ class MapsFragment :
     private lateinit var markerColors: List<Float>
     private var currentMarkers = mutableMapOf<LocationViewData, Pair<Marker?, Boolean>>()
     private var cameraMoved = false
-    private var currentLocation = LatLng(0.0, 0.0)
+    private var zoomChanged = false
+    private var currentZoom = 0f
     private var circle: Circle? = null
+    private var currentLocation: Location? = null
     private val activityRegister = registerForActivityResult(ActivityResultContracts.RequestPermission()) {
         onPermissionsGranted(it)
     }
@@ -175,19 +182,28 @@ class MapsFragment :
     private fun moveToLocation(location: Location) {
         val latLng = LatLng(location.latitude, location.longitude)
         val center = CameraUpdateFactory.newLatLng(latLng)
-        val zoom = CameraUpdateFactory.zoomTo(radius.getZoomLevel(context, resources))
-        if (!cameraMoved) {
-            map?.apply {
-                moveCamera(center)
-                animateCamera(zoom)
-                circle = circle ?: addCircle(CircleOptions().center(latLng).radius(radius))
-                circle?.center = latLng
-            }
+        map?.apply {
+            moveCamera(center)
+            circle = circle ?: addCircle(CircleOptions().center(latLng).radius(radius))
+            circle?.center = latLng
+            circle?.radius = radius
         }
     }
 
+    private fun zoomToRadius() {
+        currentZoom = (radius/2).getZoomLevel(context)
+        val zoom = CameraUpdateFactory.zoomTo(currentZoom)
+        map?.apply {
+            animateCamera(zoom)
+        }
+        zoomChanged = false
+    }
+
     override fun onLocationChanged(location: Location) {
+        if (cameraMoved) return
+        currentLocation = location
         moveToLocation(location)
+        zoomToRadius()
         viewModel.fetchAllRestaurantLocations(location.latitude, location.longitude, radius.roundToInt())
     }
 
@@ -238,11 +254,14 @@ class MapsFragment :
     override fun onCameraMoveStarted(reason: Int) {
         if (reason == REASON_GESTURE) {
             cameraMoved = true
+            view?.findViewById<Button>(R.id.search_here_btn)?.visibility = View.VISIBLE
         }
     }
 
     override fun onMyLocationButtonClick(): Boolean {
         cameraMoved = false
+        zoomToRadius()
+        view?.findViewById<Button>(R.id.search_here_btn)?.visibility = View.GONE
         return false
     }
 
