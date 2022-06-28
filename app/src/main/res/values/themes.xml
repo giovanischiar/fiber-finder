@@ -16,4 +16,7 @@
     <item name="windowNoTitle">true</item>
   </style>
 
+  <style name="Theme.FiberFinder.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+  <style name="Theme.FiberFinder.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+
  </resources>
