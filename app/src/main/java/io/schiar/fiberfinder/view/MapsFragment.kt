@@ -46,7 +46,7 @@ class MapsFragment :
     private var map: GoogleMap? = null
     private var LOCATION_REFRESH_TIME = 3000 // 3 seconds. The Minimum Time to get location update
     private var LOCATION_REFRESH_DISTANCE = 0 // 0 meters. The Minimum Distance to be changed to get location update
-    private var radius = 1000.0
+    private var radius = 6000.0
     private lateinit var markerColors: List<Float>
     private var currentMarkers = mutableMapOf<LocationViewData, Pair<Marker?, Boolean>>()
     private var cameraMoved = false
@@ -87,6 +87,7 @@ class MapsFragment :
         mapFragment?.getMapAsync(this)
 
         view.findViewById<Button>(R.id.search_here_btn).setOnClickListener {
+            it.visibility = View.GONE
             val centerLatLng = map?.cameraPosition?.target
             centerLatLng ?: return@setOnClickListener
             currentLocation?.latitude =  centerLatLng.latitude

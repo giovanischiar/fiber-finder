@@ -24,7 +24,7 @@ class RestaurantRepository : RestaurantRepositoryInterface {
             @Suppress("UNCHECKED_CAST")
             val values = map["values"] as List<List<String>>?
             val foods = values?.subList(1, values.size)?.map {
-                Restaurant(it[0], it[1])
+                Restaurant(it[0], it[1], listOf())
             }
 
             Handler(Looper.getMainLooper()).post {

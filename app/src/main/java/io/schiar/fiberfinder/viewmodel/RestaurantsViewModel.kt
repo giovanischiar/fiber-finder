@@ -2,14 +2,15 @@ package io.schiar.fiberfinder.viewmodel
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import io.schiar.fiberfinder.model.Location
-import io.schiar.fiberfinder.model.Restaurant
 import io.schiar.fiberfinder.model.repository.LocationRepository
 import io.schiar.fiberfinder.model.repository.LocationRepositoryInterface
 import io.schiar.fiberfinder.model.repository.RestaurantRepository
 import io.schiar.fiberfinder.model.repository.RestaurantRepositoryInterface
-import io.schiar.fiberfinder.view.viewdata.LocationViewData
 import io.schiar.fiberfinder.view.viewdata.RestaurantViewData
+import io.schiar.fiberfinder.view.viewdata.addLocationsViewData
+import kotlinx.coroutines.*
 
 class RestaurantsViewModel(
     private val restaurantRepository: RestaurantRepositoryInterface = RestaurantRepository(),
@@ -30,32 +31,39 @@ class RestaurantsViewModel(
     fun fetchAllRestaurantLocations(latitude: Double, longitude: Double, radius: Int) {
         restaurants.value ?: return
         val restaurantsValue = restaurants.value
-        val updatedRestaurants = mutableListOf<RestaurantViewData>()
-        restaurantsValue?.toMutableList()?.toCollection(updatedRestaurants)
+        //restaurantsValue?.toMutableList()?.toCollection(updatedRestaurants)
         //val reducedList = listOf(restaurantsValue?.get(37) ?: return)
-        restaurantsValue?.forEach {
-            locationRepository.fetch(it.name, Location(latitude, longitude), radius) { locations ->
-                val index = updatedRestaurants.indexOf(it)
-                val restaurantViewData = RestaurantViewData(
-                    it.name,
-                    it.menu,
-                    locations.map { location -> LocationViewData(location.latitude, location.longitude) }
-                )
-                updatedRestaurants[index] = restaurantViewData
-                restaurants.postValue(updatedRestaurants.toList())
-            }
+        viewModelScope.launch {
+            restaurants.postValue(
+                locationRepository.fetchAll(
+                    restaurantsValue?.map { it.name } ?: return@launch,
+                    Location(latitude, longitude),
+                    radius,
+                    this
+                ).map {
+                    val res = restaurantsValue.filter {
+                        restaurant -> restaurant.name === it.first
+                    }[0]
+                    val locations = it.second
+                    res.addLocationsViewData(locations.toListViewData())
+                }
+            )
         }
     }
 
     fun fetchRestaurantLocations(latitude: Double, longitude: Double, radius: Int) {
         restaurant.value ?: return
         val restaurantValue = restaurant.value as RestaurantViewData
-        locationRepository.fetch(restaurantValue.name, Location(latitude, longitude), radius) {
+        viewModelScope.launch {
+            val locations = locationRepository.fetchCoroutine(
+                restaurantValue.name,
+                Location(latitude, longitude),
+                radius
+            ).second
             restaurant.postValue(
-                RestaurantViewData(
-                    restaurantValue.name,
-                    restaurantValue.menu,
-                    it.map { location -> LocationViewData(location.latitude, location.longitude) })
+                restaurantValue.addLocationsViewData(
+                    locations.toListViewData()
+                )
             )
         }
     }
@@ -63,7 +71,7 @@ class RestaurantsViewModel(
     fun fetch() {
         restaurantRepository.fetch {
             restaurants.postValue(it.map { restaurant ->
-                RestaurantViewData(restaurant.name, restaurant.menu, listOf())
+                restaurant.toViewData()
             })
         }
     }
