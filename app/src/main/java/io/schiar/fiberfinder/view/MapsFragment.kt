@@ -9,6 +9,7 @@ import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Bundle
 import android.text.InputType
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -47,7 +48,6 @@ class MapsFragment :
     private var LOCATION_REFRESH_TIME = 3000 // 3 seconds. The Minimum Time to get location update
     private var LOCATION_REFRESH_DISTANCE = 0 // 0 meters. The Minimum Distance to be changed to get location update
     private var radius = 6000.0
-    private lateinit var markerColors: List<Float>
     private var currentMarkers = mutableMapOf<LocationViewData, Pair<Marker?, Boolean>>()
     private var cameraMoved = false
     private var zoomChanged = false
@@ -64,18 +64,6 @@ class MapsFragment :
         savedInstanceState: Bundle?
     ): View? {
         activityRegister.launch(Manifest.permission.ACCESS_FINE_LOCATION)
-        markerColors = listOf(
-            BitmapDescriptorFactory.HUE_AZURE,
-            BitmapDescriptorFactory.HUE_BLUE,
-            BitmapDescriptorFactory.HUE_CYAN,
-            BitmapDescriptorFactory.HUE_GREEN,
-            BitmapDescriptorFactory.HUE_MAGENTA,
-            BitmapDescriptorFactory.HUE_ORANGE,
-            BitmapDescriptorFactory.HUE_RED,
-            BitmapDescriptorFactory.HUE_ROSE,
-            BitmapDescriptorFactory.HUE_VIOLET,
-            BitmapDescriptorFactory.HUE_YELLOW
-        )
         viewModel = ViewModelProvider(requireActivity())[RestaurantsViewModel::class.java]
         viewModel.restaurants.observe(viewLifecycleOwner, this)
         return inflater.inflate(R.layout.fragment_maps, container, false)
@@ -208,7 +196,7 @@ class MapsFragment :
         viewModel.fetchAllRestaurantLocations(location.latitude, location.longitude, radius.roundToInt())
     }
 
-    private fun plotMarkers(name: String, locations: List<LocationViewData>, color: Float) {
+    private fun plotMarkers(name: String, locations: List<LocationViewData>, color: Float, isVisible: Boolean) {
         locations.forEach { location ->
             val latLng = LatLng(
                 location.latitude,
@@ -223,6 +211,7 @@ class MapsFragment :
                 val value = currentMarkers[location]
                 currentMarkers[location] = Pair(value?.first, true)
             }
+            currentMarkers[location]?.first?.isVisible = isVisible
         }
     }
 
@@ -243,11 +232,9 @@ class MapsFragment :
 
     override fun onChanged(restaurants: List<RestaurantViewData>?) {
         map ?: return
-        var i = 0
         invalidateAllMarkers()
-        restaurants?.filter {it.locations.isNotEmpty()}?.forEach {
-            plotMarkers(it.name, it.locations, markerColors[i])
-            i = (i + 1) % markerColors.size
+        restaurants?.forEach {
+            plotMarkers(it.name, it.locations, it.markerColor.floatValue, it.isShown)
         }
         removeOldMarkers()
     }

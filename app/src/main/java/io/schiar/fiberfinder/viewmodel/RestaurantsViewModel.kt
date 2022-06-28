@@ -16,6 +16,8 @@ class RestaurantsViewModel(
     private val restaurantRepository: RestaurantRepositoryInterface = RestaurantRepository(),
     private val locationRepository: LocationRepositoryInterface = LocationRepository()
 ) : ViewModel() {
+    private val markerColors = MarkerColors.values()
+
     val restaurants: MutableLiveData<List<RestaurantViewData>> by lazy {
         MutableLiveData<List<RestaurantViewData>>()
     }
@@ -24,11 +26,20 @@ class RestaurantsViewModel(
         MutableLiveData<RestaurantViewData>()
     }
 
+    fun changeIsShownRestaurantAt(index: Int) {
+        val updatedRestaurants = (restaurants.value ?: return)
+        val restaurant = updatedRestaurants.filter { it.locations.isNotEmpty() }[index]
+        val i = updatedRestaurants.indexOf(restaurant)
+        updatedRestaurants[i].isShown = !updatedRestaurants[i].isShown
+        restaurants.postValue(updatedRestaurants)
+    }
+
     fun restaurantAt(index: Int) {
         restaurant.postValue(restaurants.value?.get(index) ?: return)
     }
 
     fun fetchAllRestaurantLocations(latitude: Double, longitude: Double, radius: Int) {
+        var i = 0;
         restaurants.value ?: return
         val restaurantsValue = restaurants.value
         //restaurantsValue?.toMutableList()?.toCollection(updatedRestaurants)
@@ -45,7 +56,7 @@ class RestaurantsViewModel(
                         restaurant -> restaurant.name === it.first
                     }[0]
                     val locations = it.second
-                    res.addLocationsViewData(locations.toListViewData())
+                    res.addLocationsViewData(locations.toListViewData(), markerColors[i++ % markerColors.size], res.isShown)
                 }
             )
         }
@@ -62,7 +73,9 @@ class RestaurantsViewModel(
             ).second
             restaurant.postValue(
                 restaurantValue.addLocationsViewData(
-                    locations.toListViewData()
+                    locations.toListViewData(),
+                    restaurant.value?.markerColor,
+                    restaurant.value?.isShown
                 )
             )
         }
@@ -70,8 +83,8 @@ class RestaurantsViewModel(
 
     fun fetch() {
         restaurantRepository.fetch {
-            restaurants.postValue(it.map { restaurant ->
-                restaurant.toViewData()
+            restaurants.postValue(it.map { restaurantWithLocations ->
+                restaurantWithLocations.toViewData()
             })
         }
     }

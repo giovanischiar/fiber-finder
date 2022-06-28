@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:app="http://schemas.android.com/apk/res-auto">
 
   <data>
     <variable name="restaurant" type="io.schiar.fiberfinder.view.viewdata.RestaurantViewData" />
@@ -7,18 +8,29 @@
     <variable
       name="selectedRestaurantListener"
       type="io.schiar.fiberfinder.view.SelectedRestaurantListener" />
+    <variable
+      name="restaurantCheckedChangedListener"
+      type="io.schiar.fiberfinder.view.RestaurantCheckedChangedListener" />
   </data>
 
   <FrameLayout
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@color/white"
-    android:onClick="@{() -> selectedRestaurantListener.onSelectRestaurant(index)}">
+    android:background="@color/white">
     <androidx.appcompat.widget.LinearLayoutCompat
       android:layout_width="match_parent"
       android:layout_height="50dp"
-      android:gravity="center"
-      android:layout_marginHorizontal="15dp">
+      android:gravity="center">
+      <com.google.android.material.checkbox.MaterialCheckBox
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:checked="@{restaurant.isShown}"
+        android:onCheckedChanged="@{() -> restaurantCheckedChangedListener.onRestaurantCheckedChanged(index)}"/>
+      <FrameLayout
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_marginEnd="15dp"
+        app:marker="@{restaurant.markerColor}" />
       <TextView
         android:layout_width="100dp"
         android:layout_height="wrap_content"

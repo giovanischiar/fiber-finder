@@ -11,7 +11,10 @@ import io.schiar.fiberfinder.R
 import io.schiar.fiberfinder.databinding.FragmentRestaurantsBinding
 import io.schiar.fiberfinder.viewmodel.RestaurantsViewModel
 
-class RestaurantsFragment : Fragment(), SelectedRestaurantListener {
+class RestaurantsFragment :
+    Fragment(),
+    SelectedRestaurantListener,
+    RestaurantCheckedChangedListener {
 
     private lateinit var viewModel: RestaurantsViewModel
 
@@ -28,7 +31,11 @@ class RestaurantsFragment : Fragment(), SelectedRestaurantListener {
         viewModel.apply {
             fetch()
             restaurants.observe(viewLifecycleOwner) {
-                binding.adapter = RestaurantListAdapter(it, this@RestaurantsFragment)
+                binding.adapter = RestaurantListAdapter(
+                    it.filter { restaurantViewData -> restaurantViewData.locations.isNotEmpty() },
+                    this@RestaurantsFragment,
+                    this@RestaurantsFragment
+                )
             }
         }
         return binding.root
@@ -38,5 +45,9 @@ class RestaurantsFragment : Fragment(), SelectedRestaurantListener {
     override fun onSelectRestaurant(index: Int) {
         viewModel.restaurantAt(index)
         findNavController().navigate(R.id.action_RestaurantsFragment_to_RestaurantFragment)
+    }
+
+    override fun onRestaurantCheckedChanged(index: Int) {
+        viewModel.changeIsShownRestaurantAt(index)
     }
 }

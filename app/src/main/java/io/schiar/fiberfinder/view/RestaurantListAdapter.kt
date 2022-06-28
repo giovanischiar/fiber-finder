@@ -10,7 +10,8 @@ import io.schiar.fiberfinder.view.viewdata.RestaurantViewData
 
 class RestaurantListAdapter(
     private val restaurants: List<RestaurantViewData>,
-    private val selectedRestaurantListener: SelectedRestaurantListener
+    private val selectedRestaurantListener: SelectedRestaurantListener,
+    private val restaurantCheckedChangedListener: RestaurantCheckedChangedListener
 ) :
     RecyclerView.Adapter<RestaurantListAdapter.ViewHolder>() {
 
@@ -22,7 +23,7 @@ class RestaurantListAdapter(
             parent,
             false
         )
-        return ViewHolder(binding, selectedRestaurantListener)
+        return ViewHolder(binding, selectedRestaurantListener, restaurantCheckedChangedListener)
     }
 
     override fun getItemCount(): Int {
@@ -35,13 +36,15 @@ class RestaurantListAdapter(
 
     class ViewHolder(
         private val binding: RestaurantAdapterBinding,
-        private val selectedRestaurantListener: SelectedRestaurantListener
+        private val selectedRestaurantListener: SelectedRestaurantListener,
+        private val restaurantCheckedChangedListener: RestaurantCheckedChangedListener
     ): RecyclerView.ViewHolder(binding.root) {
         fun bind(restaurant: RestaurantViewData, index: Int) {
             binding.apply {
                 this.restaurant = restaurant
                 this.index = index
                 this.selectedRestaurantListener = this@ViewHolder.selectedRestaurantListener
+                this.restaurantCheckedChangedListener = this@ViewHolder.restaurantCheckedChangedListener
                 executePendingBindings()
             }
         }

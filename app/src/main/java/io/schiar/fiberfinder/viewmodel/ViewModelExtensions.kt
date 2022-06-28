@@ -13,10 +13,11 @@ fun List<Location>.toListViewData(): List<LocationViewData> {
     return this.map { it.toViewData() }
 }
 
-fun Restaurant.toViewData(locations: List<Location> = this.locations): RestaurantViewData {
+fun Restaurant.toViewData(locations: List<Location> = this.locations, markerColor: MarkerColors = MarkerColors.HUE_RED): RestaurantViewData {
     return RestaurantViewData(
         this.name,
         this.menu,
-        locations.toListViewData()
+        locations.toListViewData(),
+        markerColor
     )
 }

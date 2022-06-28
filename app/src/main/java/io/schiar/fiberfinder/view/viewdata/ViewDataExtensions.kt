@@ -1,9 +1,17 @@
 package io.schiar.fiberfinder.view.viewdata
 
-fun RestaurantViewData.addLocationsViewData(locations: List<LocationViewData>): RestaurantViewData {
+import io.schiar.fiberfinder.viewmodel.MarkerColors
+
+fun RestaurantViewData.addLocationsViewData(
+    locations: List<LocationViewData>,
+    markersColor: MarkerColors? = MarkerColors.HUE_RED,
+    isShown: Boolean? = true
+): RestaurantViewData {
     return RestaurantViewData(
         this.name,
         this.menu,
-        locations
+        locations,
+        markersColor ?: MarkerColors.HUE_RED,
+        isShown ?:true
     )
 }
