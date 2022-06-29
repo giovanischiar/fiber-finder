@@ -26,6 +26,7 @@ import com.google.android.gms.maps.GoogleMap.OnCameraMoveStartedListener.REASON_
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
+import com.google.android.material.progressindicator.LinearProgressIndicator
 import io.schiar.fiberfinder.R
 import io.schiar.fiberfinder.view.viewdata.LocationViewData
 import io.schiar.fiberfinder.view.viewdata.RestaurantViewData
@@ -66,6 +67,16 @@ class MapsFragment :
         activityRegister.launch(Manifest.permission.ACCESS_FINE_LOCATION)
         viewModel = ViewModelProvider(requireActivity())[RestaurantsViewModel::class.java]
         viewModel.restaurants.observe(viewLifecycleOwner, this)
+        viewModel.progress.observe(viewLifecycleOwner) {
+            it ?: return@observe
+            val progressIndicator = view?.findViewById<LinearProgressIndicator>(R.id.linear_progress_indicator) ?: return@observe
+            if (it != 100) {
+                progressIndicator.show()
+                progressIndicator.progress = it
+            } else {
+                progressIndicator.hide()
+            }
+        }
         return inflater.inflate(R.layout.fragment_maps, container, false)
     }
 
@@ -100,7 +111,6 @@ class MapsFragment :
                 centerLatLng.longitude,
                 radius.roundToInt()
             )
-
             moveToLocation(currentLocation ?: return@setOnClickListener)
         }
     }
@@ -236,6 +246,8 @@ class MapsFragment :
         restaurants?.forEach {
             plotMarkers(it.name, it.locations, it.markerColor.floatValue, it.isShown)
         }
+        val progressIndicator = view?.findViewById<LinearProgressIndicator>(R.id.linear_progress_indicator) ?: return
+        progressIndicator.max = restaurants?.size ?: progressIndicator.max
         removeOldMarkers()
     }
 

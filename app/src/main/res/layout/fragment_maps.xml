@@ -29,4 +29,16 @@
     android:visibility="gone"
     android:text="Search in this area"/>
 
+  <com.google.android.material.progressindicator.LinearProgressIndicator
+    android:id="@+id/linear_progress_indicator"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:indeterminate="false"
+    android:progress="0"
+    android:visibility="gone"
+    app:trackThickness="8dp"
+    app:layout_constraintLeft_toLeftOf="parent"
+    app:layout_constraintRight_toRightOf="parent"
+    app:layout_constraintTop_toTopOf="parent" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

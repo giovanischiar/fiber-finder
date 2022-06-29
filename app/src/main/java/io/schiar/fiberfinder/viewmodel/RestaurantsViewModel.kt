@@ -15,8 +15,10 @@ import kotlinx.coroutines.*
 class RestaurantsViewModel(
     private val restaurantRepository: RestaurantRepositoryInterface = RestaurantRepository(),
     private val locationRepository: LocationRepositoryInterface = LocationRepository()
-) : ViewModel() {
+) : ViewModel(), ProgressReporter {
     private val markerColors = MarkerColors.values()
+
+    val progress: MutableLiveData<Int> = MutableLiveData(100)
 
     val restaurants: MutableLiveData<List<RestaurantViewData>> by lazy {
         MutableLiveData<List<RestaurantViewData>>()
@@ -44,12 +46,14 @@ class RestaurantsViewModel(
         val restaurantsValue = restaurants.value
         //restaurantsValue?.toMutableList()?.toCollection(updatedRestaurants)
         //val reducedList = listOf(restaurantsValue?.get(37) ?: return)
+        progress.postValue(0)
         viewModelScope.launch {
             restaurants.postValue(
                 locationRepository.fetchAll(
                     restaurantsValue?.map { it.name } ?: return@launch,
                     Location(latitude, longitude),
                     radius,
+                    this@RestaurantsViewModel,
                     this
                 ).map {
                     val res = restaurantsValue.filter {
@@ -59,6 +63,7 @@ class RestaurantsViewModel(
                     res.addLocationsViewData(locations.toListViewData(), markerColors[i++ % markerColors.size], res.isShown)
                 }
             )
+            progress.postValue(100)
         }
     }
 
@@ -69,7 +74,8 @@ class RestaurantsViewModel(
             val locations = locationRepository.fetchCoroutine(
                 restaurantValue.name,
                 Location(latitude, longitude),
-                radius
+                radius,
+                this@RestaurantsViewModel
             ).second
             restaurant.postValue(
                 restaurantValue.addLocationsViewData(
@@ -87,5 +93,9 @@ class RestaurantsViewModel(
                 restaurantWithLocations.toViewData()
             })
         }
+    }
+
+    override fun reportProgress(value: Int) {
+        progress.postValue((progress.value ?: return) + value)
     }
 }
