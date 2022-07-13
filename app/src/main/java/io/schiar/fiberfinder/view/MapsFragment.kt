@@ -9,7 +9,6 @@ import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Bundle
 import android.text.InputType
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -18,7 +17,6 @@ import android.widget.EditText
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -29,10 +27,9 @@ import com.google.android.gms.maps.model.*
 import com.google.android.material.progressindicator.LinearProgressIndicator
 import io.schiar.fiberfinder.R
 import io.schiar.fiberfinder.view.viewdata.LocationViewData
-import io.schiar.fiberfinder.view.viewdata.RestaurantViewData
 import io.schiar.fiberfinder.viewmodel.RestaurantsViewModel
 import kotlin.math.roundToInt
-
+import kotlin.math.roundToLong
 
 class MapsFragment :
     Fragment(),
@@ -41,22 +38,76 @@ class MapsFragment :
     GoogleMap.OnCameraMoveStartedListener,
     GoogleMap.OnMyLocationButtonClickListener,
     GoogleMap.OnMarkerClickListener,
-    OnRadiusChangeButtonClickedListener,
-    Observer<List<RestaurantViewData>> {
+    OnRadiusChangeButtonClickedListener {
 
     private lateinit var viewModel: RestaurantsViewModel
     private var map: GoogleMap? = null
     private var LOCATION_REFRESH_TIME = 3000 // 3 seconds. The Minimum Time to get location update
-    private var LOCATION_REFRESH_DISTANCE = 0 // 0 meters. The Minimum Distance to be changed to get location update
+    private var LOCATION_REFRESH_DISTANCE = 20 // 0 meters. The Minimum Distance to be changed to get location update
     private var radius = 6000.0
-    private var currentMarkers = mutableMapOf<LocationViewData, Pair<Marker?, Boolean>>()
     private var cameraMoved = false
     private var zoomChanged = false
     private var currentZoom = 0f
     private var circle: Circle? = null
     private var currentLocation: Location? = null
-    private val activityRegister = registerForActivityResult(ActivityResultContracts.RequestPermission()) {
+    private val activityRegister = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) {
         onPermissionsGranted(it)
+    }
+
+    private val markers = mutableMapOf<LocationViewData, Marker>()
+
+    private fun setObservers() {
+        viewModel.restaurantAmount.observe(viewLifecycleOwner) {
+            val progressIndicatorID = R.id.linear_progress_indicator
+            val progressIndicator = (view ?: return@observe)
+                .findViewById<LinearProgressIndicator>(progressIndicatorID)
+            progressIndicator.max = it
+        }
+
+        viewModel.markersToAdd.observe(viewLifecycleOwner) { markersToAdd ->
+            var adding = 0
+            println("# adding ${markersToAdd.size} markers... markers now: ${markers.keys}")
+            for (entry in markersToAdd.filter { !markers.containsKey(it.key) }) {
+                val (locationViewData, markerViewData) = entry
+                markers[locationViewData] = generateAndAddNewMarker(
+                    markerViewData.name,
+                    locationViewData.toLatLng(),
+                    markerViewData.color
+                ) ?: continue
+                adding++
+            }
+
+            println("# $adding markers added! markers now: ${markers.keys}")
+        }
+
+        viewModel.markersToRem.observe(viewLifecycleOwner) { markersToRem ->
+            var removing = 0
+            println("# removing ${markersToRem.size} markers... markers now: ${markers.keys}")
+            for (locationViewData in markersToRem.keys) {
+                (markers[locationViewData] ?: continue).remove()
+                markers.remove(locationViewData)
+                removing++
+            }
+            println("# $removing markers removed! markers now: ${markers.keys}")
+        }
+
+        viewModel.progress.observe(viewLifecycleOwner) { progress ->
+            progress ?: return@observe
+            val progressIndicatorID = R.id.linear_progress_indicator
+            val progressIndicator = (view ?: return@observe)
+                .findViewById<LinearProgressIndicator>(progressIndicatorID)
+            progressIndicator ?: return@observe
+            progressIndicator.apply {
+                if (progress != progressIndicator.max) {
+                    show()
+                    this.progress = progress
+                } else {
+                    hide()
+                }
+            }
+        }
     }
 
     override fun onCreateView(
@@ -66,17 +117,7 @@ class MapsFragment :
     ): View? {
         activityRegister.launch(Manifest.permission.ACCESS_FINE_LOCATION)
         viewModel = ViewModelProvider(requireActivity())[RestaurantsViewModel::class.java]
-        viewModel.restaurants.observe(viewLifecycleOwner, this)
-        viewModel.progress.observe(viewLifecycleOwner) {
-            it ?: return@observe
-            val progressIndicator = view?.findViewById<LinearProgressIndicator>(R.id.linear_progress_indicator) ?: return@observe
-            if (it != 100) {
-                progressIndicator.show()
-                progressIndicator.progress = it
-            } else {
-                progressIndicator.hide()
-            }
-        }
+        setObservers()
         return inflater.inflate(R.layout.fragment_maps, container, false)
     }
 
@@ -142,7 +183,6 @@ class MapsFragment :
     }
 
     private fun checkPermission(): Boolean {
-        //val applicationContext = requireActivity().applicationContext
         val accessFineLocation = Manifest.permission.ACCESS_FINE_LOCATION
         val accessCoarseLocation = Manifest.permission.ACCESS_COARSE_LOCATION
         val result = requireActivity().checkSelfPermission(accessFineLocation)
@@ -203,52 +243,18 @@ class MapsFragment :
         currentLocation = location
         moveToLocation(location)
         zoomToRadius()
-        viewModel.fetchAllRestaurantLocations(location.latitude, location.longitude, radius.roundToInt())
+        val latitude = location.latitude
+        val longitude = location.longitude
+        viewModel.fetchAllRestaurantLocations(latitude, longitude, radius.roundToInt())
     }
 
-    private fun plotMarkers(name: String, locations: List<LocationViewData>, color: Float, isVisible: Boolean) {
-        locations.forEach { location ->
-            val latLng = LatLng(
-                location.latitude,
-                location.longitude
-            )
-            val markerOptions = MarkerOptions().position(latLng)
-                .icon(BitmapDescriptorFactory.defaultMarker(color))
-                .title(name)
-            if (!currentMarkers.contains(location)) {
-                currentMarkers[location] = Pair(map?.addMarker(markerOptions), true)
-            } else {
-                val value = currentMarkers[location]
-                currentMarkers[location] = Pair(value?.first, true)
-            }
-            currentMarkers[location]?.first?.isVisible = isVisible
-        }
-    }
-
-    private fun invalidateAllMarkers() {
-        for (markerKey in currentMarkers.keys) {
-            val value = currentMarkers[markerKey]
-            currentMarkers[markerKey] = Pair(value?.first, false)
-        }
-    }
-
-    private fun removeOldMarkers() {
-        currentMarkers.filter { !it.value.second }.forEach { (key, value) ->
-            val marker = value.first
-            marker?.remove()
-            currentMarkers.remove(key)
-        }
-    }
-
-    override fun onChanged(restaurants: List<RestaurantViewData>?) {
-        map ?: return
-        invalidateAllMarkers()
-        restaurants?.forEach {
-            plotMarkers(it.name, it.locations, it.markerColor.floatValue, it.isShown)
-        }
-        val progressIndicator = view?.findViewById<LinearProgressIndicator>(R.id.linear_progress_indicator) ?: return
-        progressIndicator.max = restaurants?.size ?: progressIndicator.max
-        removeOldMarkers()
+    private fun generateAndAddNewMarker(name: String, latLng: LatLng, color: Float): Marker? {
+        val bitmapDescriptor = BitmapDescriptorFactory.defaultMarker(color)
+        val markerOptions = MarkerOptions()
+            .position(latLng)
+            .icon(bitmapDescriptor)
+            .title(name)
+        return (map ?: return null).addMarker(markerOptions)
     }
 
     override fun onCameraMoveStarted(reason: Int) {

@@ -4,9 +4,6 @@ import android.os.Handler
 import android.os.Looper
 import io.schiar.fiberfinder.BuildConfig
 import io.schiar.fiberfinder.model.Location
-import io.schiar.fiberfinder.model.Restaurant
-import io.schiar.fiberfinder.view.viewdata.LocationViewData
-import io.schiar.fiberfinder.view.viewdata.RestaurantViewData
 import io.schiar.fiberfinder.viewmodel.ProgressReporter
 import kotlinx.coroutines.*
 import org.json.JSONObject
@@ -91,11 +88,12 @@ class LocationRepository : LocationRepositoryInterface {
     override suspend fun fetchCoroutine(
         keyword: String, location: Location, radius: Int, progressReporter: ProgressReporter
     ) = suspendCoroutine { continuation ->
-        this.fetch(keyword, location, radius) { locations ->
-            continuation.resume(keyword to locations)
-            progressReporter.reportProgress(1)
+            this.fetch(keyword, location, radius) { locations ->
+                continuation.resume(keyword to locations)
+                Thread.currentThread().name = "$keyword fetcher"
+                progressReporter.reportProgress(keyword to locations)
+            }
         }
-    }
 
     override suspend fun fetchAll(
         keywords: List<String>,

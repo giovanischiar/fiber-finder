@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import io.schiar.fiberfinder.R
 import io.schiar.fiberfinder.databinding.FragmentRestaurantsBinding
+import io.schiar.fiberfinder.view.viewdata.RestaurantViewData
 import io.schiar.fiberfinder.viewmodel.RestaurantsViewModel
 
 class RestaurantsFragment :
@@ -17,6 +18,7 @@ class RestaurantsFragment :
     RestaurantCheckedChangedListener {
 
     private lateinit var viewModel: RestaurantsViewModel
+    private val currentRestaurants = mutableSetOf<RestaurantViewData>()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -30,13 +32,30 @@ class RestaurantsFragment :
         }
         viewModel.apply {
             fetch()
-            restaurants.observe(viewLifecycleOwner) {
+            currentRestaurants.observe(viewLifecycleOwner) {
                 binding.adapter = RestaurantListAdapter(
-                    it.filter { restaurantViewData -> restaurantViewData.locations.isNotEmpty() },
+                    it,
                     this@RestaurantsFragment,
                     this@RestaurantsFragment
                 )
             }
+//            restaurants.observe(viewLifecycleOwner) {
+//                binding.adapter = RestaurantListAdapter(
+//                    it.filter { restaurantViewData -> restaurantViewData.locations.isNotEmpty() },
+//                    this@RestaurantsFragment,
+//                    this@RestaurantsFragment
+//                )
+//            }
+//
+//            partialRestaurantLocation.observe(viewLifecycleOwner) {
+//                currentRestaurants.add(it)
+//                val restaurantListAdapter = RestaurantListAdapter(
+//                    currentRestaurants.filter { restaurant -> restaurant.locations.isNotEmpty() }.toList(),
+//                    this@RestaurantsFragment,
+//                    this@RestaurantsFragment
+//                )
+//                binding.adapter = restaurantListAdapter
+//            }
         }
         return binding.root
 
